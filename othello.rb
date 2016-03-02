@@ -136,13 +136,25 @@ class Move
   def inspect
     "Move(#{x}, #{y}, #{color})"
   end
+
+  def to_s
+    ('A'..'H').to_a[x] + ('0'..'7').to_a[y]
+  end
 end
 
-class HumanPlayer
+class Player
+  attr_reader :color
+
   def initialize(color:)
     @color = color
   end
 
+  def next_move(grid:)
+    raise NotImplementedError
+  end
+end
+
+class HumanPlayer < Player
   def next_move(grid:)
     loop do
       print "#{@color}’s move? (e.g. A3) "
@@ -164,15 +176,25 @@ class HumanPlayer
   end
 end
 
+class AIPlayer < Player
+  def next_move(grid:)
+    grid.valid_moves(color: color).sample.tap do |move|
+      puts "#{@color}’s move is #{move}."
+    end
+  end
+end
+
 grid = Grid.new
 
-player_a = HumanPlayer.new(color: :white)
-player_b = HumanPlayer.new(color: :black)
+players = [
+  HumanPlayer.new(color: :white),
+  AIPlayer.new(color: :black),
+]
 
 loop do
-  puts grid
-  grid = grid.apply_move(player_a.next_move(grid: grid))
-
-  puts grid
-  grid = grid.apply_move(player_b.next_move(grid: grid))
+  players.each do |player|
+    puts grid
+    grid = grid.apply_move(player.next_move(grid: grid))
+    puts
+  end
 end
