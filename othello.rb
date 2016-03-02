@@ -52,9 +52,23 @@ class Grid
   end
 
   def valid_ray?(ray, color)
-    ray.size >= 2 &&
-      @grid[ray[0]] == invert_color(color) &&
-      @grid[ray.chunk_while { |a, b| @grid[a] == @grid[b] }.drop(1).first[0]] == color
+    begin
+      if ray.size <= 2 || @grid[ray[0]] != invert_color(color)
+        false
+      else
+        chunks = ray.chunk_while { |a, b| @grid[a] == @grid[b] }.to_a
+        if chunks.size < 2
+          false
+        else
+          @grid[chunks[1][0]] == color
+        end
+      end
+    rescue => e
+      p e
+      p ray
+      p ray.map { |(x, y)| @grid[[x, y]] }
+      raise e
+    end
   end
 
   def invert_color(color)
@@ -178,23 +192,76 @@ end
 
 class AIPlayer < Player
   def next_move(grid:)
-    grid.valid_moves(color: color).sample.tap do |move|
-      puts "#{@color}’s move is #{move}."
+    grid.valid_moves(color: color).sample
+  end
+end
+
+class UI
+  def before_move(player, grid)
+    raise NotImplementedError
+  end
+
+  def after_move(player, grid)
+    raise NotImplementedError
+  end
+
+  def announce_winner(color)
+    raise NotImplementedError
+  end
+end
+
+class HumanUI
+  def before_move(player, grid)
+    puts grid
+  end
+
+  def after_move(player, grid)
+    sleep 0.1
+    puts
+  end
+
+  def announce_winner(color)
+    puts "#{color} wins!"
+  end
+end
+
+class SilentUI
+  def before_move(player, grid)
+  end
+
+  def after_move(player, grid)
+  end
+
+  def announce_winner(color)
+  end
+end
+
+class Game
+  def initialize(ui:)
+    @ui = ui
+
+    @players = [
+      AIPlayer.new(color: :white),
+      AIPlayer.new(color: :black),
+    ]
+  end
+
+  def play
+    grid = Grid.new
+    loop do
+      @players.each do |player|
+        @ui.before_move(player, grid)
+        if grid.valid_moves(color: player.color).empty?
+          # FIXME: bad win condition
+          winner = grid.invert_color(player.color)
+          @ui.announce_winner(winner)
+          return winner
+        end
+        grid = grid.apply_move(player.next_move(grid: grid))
+        @ui.after_move(player, grid)
+      end
     end
   end
 end
 
-grid = Grid.new
-
-players = [
-  HumanPlayer.new(color: :white),
-  AIPlayer.new(color: :black),
-]
-
-loop do
-  players.each do |player|
-    puts grid
-    grid = grid.apply_move(player.next_move(grid: grid))
-    puts
-  end
-end
+p Game.new(ui: HumanUI.new).play
