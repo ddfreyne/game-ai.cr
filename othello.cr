@@ -1,10 +1,10 @@
 class Grid
   def initialize(grid = nil)
     @grid = grid || {
-      [3, 3] => :black,
-      [4, 4] => :black,
-      [4, 3] => :white,
-      [3, 4] => :white,
+      {3, 3} => :black,
+      {4, 4} => :black,
+      {4, 3} => :white,
+      {3, 4} => :white,
     }
   end
 
@@ -12,7 +12,7 @@ class Grid
     raise ArgumentError.new("x must be 0..7") unless (0..7).includes?(x)
     raise ArgumentError.new("y must be 0..7") unless (0..7).includes?(y)
 
-    @grid[[x, y]]?
+    @grid[{x, y}]?
   end
 
   def [](coords : Array)
@@ -21,6 +21,10 @@ class Grid
     else
       self[coords[0], coords[1]]
     end
+  end
+
+  def [](coords : Tuple(Int32, Int32))
+    self[coords[0], coords[1]]
   end
 
   def filled?
@@ -35,7 +39,7 @@ class Grid
   end
 
   def valid_move?(move)
-    if self[[move.x, move.y]]
+    if self[move.x, move.y]
       false
     else
       cast_rays(move.x, move.y).any? { |ray| valid_ray?(ray, move.color) }
@@ -66,7 +70,7 @@ class Grid
     dys = (1..7).map { |i| i * fy }
 
     dxs.zip(dys)
-      .map { |pair| [x+pair[0], y+pair[1]] }
+      .map { |pair| {x+pair[0], y+pair[1]} }
       .select { |pair| bounds.includes?(pair[0]) && bounds.includes?(pair[1]) }
   end
 
@@ -111,7 +115,7 @@ class Grid
   end
 
   def apply_move(move)
-    new_grid = @grid.merge({ [move.x, move.y] => move.color })
+    new_grid = @grid.merge({ {move.x, move.y} => move.color })
 
     valid_rays =
       cast_rays(move.x, move.y).select{ |ray| valid_ray?(ray, move.color) }
