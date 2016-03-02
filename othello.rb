@@ -190,9 +190,27 @@ class HumanPlayer < Player
   end
 end
 
-class AIPlayer < Player
+class RandomPlayer < Player
   def next_move(grid:)
     grid.valid_moves(color: color).sample
+  end
+end
+
+class AIPlayer < Player
+  def next_move(grid:)
+    players = [
+      RandomPlayer.new(color: :white),
+      RandomPlayer.new(color: :black),
+    ]
+
+    best_move =
+      grid.valid_moves(color: color).max do |move|
+        game = Game.new(ui: SilentUI.new, grid: grid.apply_move(move), players: players)
+        num_wins = (0...10).count { game.play == color }
+        num_wins
+      end
+
+    best_move
   end
 end
 
@@ -237,17 +255,18 @@ class SilentUI
 end
 
 class Game
-  def initialize(ui:)
+  def initialize(ui:, grid: Grid.new, players: nil)
     @ui = ui
+    @grid = grid
 
-    @players = [
-      AIPlayer.new(color: :white),
+    @players = players || [
+      RandomPlayer.new(color: :white),
       AIPlayer.new(color: :black),
     ]
   end
 
   def play
-    grid = Grid.new
+    grid = @grid
     loop do
       @players.each do |player|
         @ui.before_move(player, grid)
