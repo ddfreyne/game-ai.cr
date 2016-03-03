@@ -6,6 +6,8 @@ class Grid
       {4, 3} => :white,
       {3, 4} => :white,
     }
+
+    @_moves = {} of Symbol => Array(Move)
   end
 
   def [](x : Int32, y : Int32)
@@ -64,14 +66,20 @@ class Grid
   end
 
   def cast_ray(x, y, fx, fy)
-    bounds = (0..7)
+    ray = Array(Tuple(Int32, Int32)).new(8)
 
-    dxs = (1..7).map { |i| i * fx }
-    dys = (1..7).map { |i| i * fy }
+    nx = x + fx
+    ny = y + fy
+    loop do
+      break if nx < 0 || nx > 7 || ny < 0 || ny > 7
 
-    dxs.zip(dys)
-      .map { |pair| {x+pair[0], y+pair[1]} }
-      .select { |pair| bounds.includes?(pair[0]) && bounds.includes?(pair[1]) }
+      ray << {nx, ny}
+
+      nx += fx
+      ny += fy
+    end
+
+    ray
   end
 
   def valid_ray?(ray, color)
@@ -103,15 +111,17 @@ class Grid
     end
   end
 
-  def valid_moves(color)
-    moves =
+  def all_moves_for(color)
+    @_moves[color] ||=
       (0..7).flat_map do |x|
         (0..7).map do |y|
           Move.new(x, y, color)
         end
       end
+  end
 
-    moves.select { |m| valid_move?(m) }
+  def valid_moves(color)
+    all_moves_for(color).select { |m| valid_move?(m) }
   end
 
   def apply_move(move)
@@ -229,7 +239,7 @@ class AIPlayer < Player
 
     grid.valid_moves(color).max_by do |move|
       game = Game.new(SilentUI.new, grid.apply_move(move), players)
-      num_wins = (0...5).count { game.play == color }
+      num_wins = (0...20).count { game.play == color }
       num_wins
     end
   end
@@ -255,7 +265,6 @@ class HumanUI < UI
   end
 
   def after_move(player, grid)
-    sleep 0.1
     puts
   end
 
@@ -288,6 +297,12 @@ class Game
 
   def play
     grid = @grid
+
+    skipped_turns = {
+      white: false,
+      black: false,
+    }
+
     loop do
       @players.each do |player|
         @ui.before_move(player, grid)
@@ -297,17 +312,29 @@ class Game
           @ui.announce_winner(winner)
           return winner
         elsif grid.valid_moves(player.color).empty?
-          # FIXME: bad win condition
-          winner = grid.invert_color(player.color)
-          @ui.announce_winner(winner)
-          return winner
+          if skipped_turns[player.color]
+            winner = grid.invert_color(player.color)
+            @ui.announce_winner(winner)
+            return winner
+          else
+            skipped_turns[player.color] = true
+          end
+        else
+          skipped_turns[player.color] = false
+          grid = grid.apply_move(player.next_move(grid))
+          @ui.after_move(player, grid)
         end
-
-        grid = grid.apply_move(player.next_move(grid))
-        @ui.after_move(player, grid)
       end
     end
   end
 end
 
-p Game.new(HumanUI.new).play
+i = 0
+loop do
+  print "Game #{i}… "
+  before = Time.now
+  result = Game.new(SilentUI.new).play
+  after = Time.now
+  puts "#{result.to_s} (#{after - before}s)"
+  i += 1
+end
