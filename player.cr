@@ -8,6 +8,17 @@ class Player
   def next_move(game)
     raise "Not implemented"
   end
+
+  def opponent_color
+    case color
+    when :black
+      :white
+    when :white
+      :black
+    else
+      raise "Unknown color: #{color.inspect}"
+    end
+  end
 end
 
 class RandomPlayer < Player
@@ -48,19 +59,18 @@ class AIPlayer < Player
   end
 
   def players
-    @_players ||=
-      [
-        RandomPlayer.new(:white),
-        RandomPlayer.new(:black),
-      ]
+    [
+      RandomPlayer.new(opponent_color),
+      RandomPlayer.new(color),
+    ]
   end
 end
 
 class SmarterAIPlayer < AIPlayer
   def players
     [
-      RandomPickWinningPlayer.new(:white),
-      RandomPickWinningPlayer.new(:black),
+      RandomPickWinningPlayer.new(opponent_color),
+      RandomPickWinningPlayer.new(color),
     ]
   end
 end
