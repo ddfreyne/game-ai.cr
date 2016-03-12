@@ -66,7 +66,7 @@ class ConnectFour < Game
   end
 
   def winner_at_horizontal(x, y)
-    if x >= 3
+    if x >= 4
       nil
     else
       pc = self[x, y]
@@ -80,7 +80,7 @@ class ConnectFour < Game
   end
 
   def winner_at_vertical(x, y)
-    if y >= 2
+    if y >= 3
       nil
     else
       pc = self[x, y]
@@ -94,7 +94,7 @@ class ConnectFour < Game
   end
 
   def winner_at_diagonal_up(x, y)
-    if x >= 3 || y >= 2
+    if x >= 4 || y >= 3
       nil
     else
       pc = self[x, y]
