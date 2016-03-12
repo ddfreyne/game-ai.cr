@@ -1,7 +1,10 @@
 abstract class Game
   abstract def over?(player_color)
   abstract def winner
+
   abstract def valid_moves(player_color)
+  abstract def valid_move?(move)
+
   abstract def apply_move(move, player_color)
   abstract def skip_move(player_color)
 end
@@ -36,6 +39,14 @@ class Othello < Game
 
   def valid_moves(player_color)
     all_moves_for(player_color).select { |m| valid_move?(m) }
+  end
+
+  def valid_move?(move)
+    if self[move.x, move.y]
+      false
+    else
+      cast_rays(move.x, move.y).any? { |ray| valid_ray?(ray, move.color) }
+    end
   end
 
   def apply_move(move, player_color)
@@ -91,14 +102,6 @@ class Othello < Game
 
   def count(color)
     @grid.values.count { |v| v == color }
-  end
-
-  def valid_move?(move)
-    if self[move.x, move.y]
-      false
-    else
-      cast_rays(move.x, move.y).any? { |ray| valid_ray?(ray, move.color) }
-    end
   end
 
   DIFFS =
