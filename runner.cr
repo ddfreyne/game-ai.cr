@@ -1,12 +1,5 @@
 class Runner
-  def initialize(ui : UI, game, players = nil)
-    @ui = ui
-    @game = game
-
-    @players = players || [
-      HumanOthelloPlayer.new(:white),
-      SmarterAIPlayer.new(:black, 10),
-    ]
+  def initialize(@ui : UI, @game, @players)
   end
 
   def play

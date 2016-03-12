@@ -10,6 +10,10 @@ class Othello < Game
     @_moves = {} of Symbol => Array(Move)
   end
 
+  def new_human_player(player_color)
+    HumanOthelloPlayer.new(player_color)
+  end
+
   ###
 
   def over?(player_color)

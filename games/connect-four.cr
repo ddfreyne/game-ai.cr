@@ -3,6 +3,10 @@ class ConnectFour < Game
     @grid = grid || {} of Int32 => Bool
   end
 
+  def new_human_player(player_color)
+    HumanConnectFourPlayer.new(player_color)
+  end
+
   def over?(player_color)
     valid_moves(player_color).empty? || !winner.nil?
   end
@@ -24,7 +28,7 @@ class ConnectFour < Game
 
   def valid_move?(move)
     verify_move(move) do |move|
-      m.x >= 0 && m.x <= 6 && @grid[{move.x, 5}]?.nil?
+      move.x >= 0 && move.x <= 6 && @grid[{move.x, 5}]?.nil?
     end
   end
 

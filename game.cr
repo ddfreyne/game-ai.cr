@@ -1,4 +1,6 @@
 abstract class Game
+  abstract def new_human_player(player_color)
+
   abstract def over?(player_color)
   abstract def winner
 
