@@ -159,7 +159,7 @@ class Othello < Game
     @_moves[color] ||=
       (0..7).flat_map do |x|
         (0..7).map do |y|
-          Move.new(x, y, color)
+          OthelloMove.new(x, y, color)
         end
       end
   end
@@ -190,8 +190,7 @@ class Othello < Game
   end
 end
 
-# TODO: Make this generic
-struct Move
+struct OthelloMove < Move
   getter :x
   getter :y
   getter :color
@@ -203,7 +202,7 @@ struct Move
   end
 
   def inspect
-    "Move(#{x}, #{y}, #{color})"
+    "Othello:Move(#{x}, #{y}, #{color})"
   end
 
   def to_s(io)
