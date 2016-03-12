@@ -6,8 +6,19 @@ To build:
 make
 ```
 
-To run:
+To play a game, run `./main` passing `--game` with the game name:
 
 ```sh
-./main
+./main --game=othello
 ```
+
+To run a AI-vs-AI simulation, run `./main` passing `--game` and `--benchmark`:
+
+```sh
+./main --game=connect-four --benchmark
+```
+
+Supported games:
+
+* Othello (`othello`)
+* Connect Four (`connect-four`)
