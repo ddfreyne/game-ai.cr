@@ -1,7 +1,3 @@
-require "./game"
-require "./player"
-require "./ui"
-
 class Othello < Game
   def initialize(grid = nil, @skips = {} of Symbol => Bool)
     @grid = grid || {
@@ -194,6 +190,7 @@ class Othello < Game
   end
 end
 
+# TODO: Make this generic
 struct Move
   getter :x
   getter :y
@@ -212,47 +209,4 @@ struct Move
   def to_s(io)
     io << ('A'..'H').to_a[x] + ('0'..'7').to_a[y]
   end
-end
-
-class Runner
-  def initialize(ui : UI, game, players = nil)
-    @ui = ui
-    @game = game
-
-    @players = players || [
-      RandomPlayer.new(:white),
-      AIPlayer.new(:black),
-    ]
-  end
-
-  def play
-    game = @game
-
-    loop do
-      @players.each do |player|
-        @ui.before_move(player, game)
-
-        if game.over?(player.color)
-          winner = game.winner
-          @ui.announce_winner(winner)
-          return winner
-        elsif game.valid_moves(player.color).empty?
-          game = game.skip_move(player.color)
-        else
-          game = game.apply_move(player.next_move(game), player.color)
-          @ui.after_move(player, game)
-        end
-      end
-    end
-  end
-end
-
-i = 0
-loop do
-  print "Game #{i}… "
-  before = Time.now
-  result = Runner.new(SilentUI.new, Othello.new).play
-  after = Time.now
-  puts "#{result.to_s} (#{after - before}s)"
-  i += 1
 end
