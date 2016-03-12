@@ -22,7 +22,11 @@ class HumanUI < UI
   end
 
   def announce_winner(color)
-    puts "#{color} wins!"
+    if color
+      puts "#{color} wins!"
+    else
+      puts "It’s a tie!"
+    end
   end
 end
 
