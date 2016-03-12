@@ -1,10 +1,11 @@
 abstract class Game
   abstract def over?
   abstract def winner
+  abstract def valid_moves(player_color)
 end
 
 class Othello < Game
-  def initialize(grid = nil)
+  def initialize(grid = nil, @white_skipped = false, @black_skipped = false)
     @grid = grid || {
       {3, 3} => :black,
       {4, 4} => :black,
@@ -14,6 +15,25 @@ class Othello < Game
 
     @_moves = {} of Symbol => Array(Move)
   end
+
+  ###
+
+  def over?
+    (0..7).to_a.zip((0..7).to_a) do |x, y|
+      return false if self[x, y].nil?
+    end
+    true
+  end
+
+  def winner
+    count(:white) > count(:black) ? :white : :black
+  end
+
+  def valid_moves(color)
+    all_moves_for(color).select { |m| valid_move?(m) }
+  end
+
+  ###
 
   def [](x : Int32, y : Int32)
     raise ArgumentError.new("x must be 0..7") unless (0..7).includes?(x)
@@ -32,17 +52,6 @@ class Othello < Game
 
   def [](coords : Tuple(Int32, Int32))
     self[coords[0], coords[1]]
-  end
-
-  def over?
-    (0..7).to_a.zip((0..7).to_a) do |x, y|
-      return false if self[x, y].nil?
-    end
-    true
-  end
-
-  def winner
-    count(:white) > count(:black) ? :white : :black
   end
 
   def count(color)
@@ -126,10 +135,6 @@ class Othello < Game
           Move.new(x, y, color)
         end
       end
-  end
-
-  def valid_moves(color)
-    all_moves_for(color).select { |m| valid_move?(m) }
   end
 
   def apply_move(move)
@@ -293,8 +298,7 @@ class SilentUI < UI
 end
 
 class Runner
-  # FIXME: pass in which game
-  def initialize(ui : UI, game = Othello.new, players = nil)
+  def initialize(ui : UI, game, players = nil)
     @ui = ui
     @game = game
 
@@ -342,7 +346,7 @@ i = 0
 loop do
   print "Game #{i}… "
   before = Time.now
-  result = Runner.new(SilentUI.new).play
+  result = Runner.new(SilentUI.new, Othello.new).play
   after = Time.now
   puts "#{result.to_s} (#{after - before}s)"
   i += 1
