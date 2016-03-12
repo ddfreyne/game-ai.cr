@@ -4,8 +4,8 @@ class Runner
     @game = game
 
     @players = players || [
-      RandomPlayer.new(:white),
-      AIPlayer.new(:black),
+      AIPlayer.new(:white, 10),
+      AIPlayer.new(:black, 50),
     ]
   end
 

@@ -17,6 +17,11 @@ class RandomPlayer < Player
 end
 
 class AIPlayer < Player
+  def initialize(color, strength)
+    super(color)
+    @strength = strength
+  end
+
   def next_move(game)
     players = [
       RandomPlayer.new(:white),
@@ -25,7 +30,7 @@ class AIPlayer < Player
 
     game.valid_moves(color).max_by do |move|
       runner = Runner.new(SilentUI.new, game.apply_move(move, self.color), players)
-      num_wins = (0...20).count { runner.play == color }
+      num_wins = (0...@strength).count { runner.play == color }
       num_wins
     end
   end
