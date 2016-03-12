@@ -1,7 +1,8 @@
 abstract class Game
-  abstract def over?
+  abstract def over?(player)
   abstract def winner
-  abstract def valid_moves(player_color)
+  abstract def valid_moves(player)
+  abstract def apply_move(move)
 end
 
 class Othello < Game
@@ -18,11 +19,9 @@ class Othello < Game
 
   ###
 
-  def over?
-    (0..7).to_a.zip((0..7).to_a) do |x, y|
-      return false if self[x, y].nil?
-    end
-    true
+  def over?(player)
+    # TODO: check valid_moves
+    filled?
   end
 
   def winner
@@ -33,7 +32,29 @@ class Othello < Game
     all_moves_for(color).select { |m| valid_move?(m) }
   end
 
+  def apply_move(move)
+    new_grid = @grid.merge({ {move.x, move.y} => move.color })
+
+    valid_rays =
+      cast_rays(move.x, move.y).select{ |ray| valid_ray?(ray, move.color) }
+    valid_rays.each do |ray|
+      ray.each do |pair|
+        break if @grid[pair] == move.color
+        new_grid[pair] = move.color
+      end
+    end
+
+    self.class.new(new_grid)
+  end
+
   ###
+
+  def filled?
+    (0..7).to_a.zip((0..7).to_a) do |x, y|
+      return false if self[x, y].nil?
+    end
+    true
+  end
 
   def [](x : Int32, y : Int32)
     raise ArgumentError.new("x must be 0..7") unless (0..7).includes?(x)
@@ -135,21 +156,6 @@ class Othello < Game
           Move.new(x, y, color)
         end
       end
-  end
-
-  def apply_move(move)
-    new_grid = @grid.merge({ {move.x, move.y} => move.color })
-
-    valid_rays =
-      cast_rays(move.x, move.y).select{ |ray| valid_ray?(ray, move.color) }
-    valid_rays.each do |ray|
-      ray.each do |pair|
-        break if @grid[pair] == move.color
-        new_grid[pair] = move.color
-      end
-    end
-
-    self.class.new(new_grid)
   end
 
   def to_s(io)
@@ -320,7 +326,7 @@ class Runner
       @players.each do |player|
         @ui.before_move(player, game)
 
-        if game.over?
+        if game.over?(player)
           winner = game.winner
           @ui.announce_winner(winner)
           return winner
