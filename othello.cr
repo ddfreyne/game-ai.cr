@@ -1,4 +1,6 @@
-class Game
+abstract class Game
+  abstract def over?
+  abstract def winner
 end
 
 class Othello < Game
@@ -32,11 +34,15 @@ class Othello < Game
     self[coords[0], coords[1]]
   end
 
-  def filled?
+  def over?
     (0..7).to_a.zip((0..7).to_a) do |x, y|
       return false if self[x, y].nil?
     end
     true
+  end
+
+  def winner
+    count(:white) > count(:black) ? :white : :black
   end
 
   def count(color)
@@ -241,7 +247,7 @@ class AIPlayer < Player
 
     game.valid_moves(color).max_by do |move|
       runner = Runner.new(SilentUI.new, game.apply_move(move), players)
-      num_wins = (0...20).count { runner.play == color }
+      num_wins = (0...10).count { runner.play == color }
       num_wins
     end
   end
@@ -310,8 +316,8 @@ class Runner
       @players.each do |player|
         @ui.before_move(player, game)
 
-        if game.filled?
-          winner = game.count(:white) > game.count(:black) ? :white : :black
+        if game.over?
+          winner = game.winner
           @ui.announce_winner(winner)
           return winner
         elsif game.valid_moves(player.color).empty?
