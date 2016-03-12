@@ -10,10 +10,14 @@ require "./games/connect-four"
 
 mode = :play
 game_name = nil
+opponent_strength = 1
+self_strength = 1
 OptionParser.parse! do |parser|
   parser.banner = "Usage: ./main [arguments]"
   parser.on("-b", "--benchmark", "Benchmark AI") { mode = :benchmark }
   parser.on("-g NAME", "--game=NAME", "Specify game") { |name| game_name = name }
+  parser.on("-s VALUE", "--strength=VALUE", "Set opponent strength") { |v| opponent_strength = v.to_i }
+  parser.on("-S VALUE", "--self-strength=VALUE", "Set self strength (for --benchmark)") { |v| self_strength = v.to_i }
   parser.on("-h", "--help", "Show this help") { puts parser }
 end
 
@@ -38,15 +42,15 @@ when :play
   players =
     [
       game.new_human_player(:white),
-      SmarterAIPlayer.new(:black, 10),
+      SmarterAIPlayer.new(:black, opponent_strength),
     ]
 
   Runner.new(HumanUI.new, game, players).play
 when :benchmark
   players =
     [
-      SmarterAIPlayer.new(:white, 2),
-      SmarterAIPlayer.new(:black, 10),
+      SmarterAIPlayer.new(:white, self_strength),
+      SmarterAIPlayer.new(:black, opponent_strength),
     ]
 
   i = 0
