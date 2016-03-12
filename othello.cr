@@ -237,8 +237,8 @@ class AIPlayer < Player
     ]
 
     grid.valid_moves(color).max_by do |move|
-      game = Game.new(SilentUI.new, grid.apply_move(move), players)
-      num_wins = (0...20).count { game.play == color }
+      runner = Runner.new(SilentUI.new, grid.apply_move(move), players)
+      num_wins = (0...20).count { runner.play == color }
       num_wins
     end
   end
@@ -283,7 +283,7 @@ class SilentUI < UI
   end
 end
 
-class Game
+class Runner
   def initialize(ui : UI, grid = Grid.new, players = nil)
     @ui = ui
     @grid = grid
@@ -330,9 +330,9 @@ end
 
 i = 0
 loop do
-  print "Game #{i}… "
+  print "Runner #{i}… "
   before = Time.now
-  result = Game.new(SilentUI.new).play
+  result = Runner.new(SilentUI.new).play
   after = Time.now
   puts "#{result.to_s} (#{after - before}s)"
   i += 1
