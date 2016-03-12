@@ -48,21 +48,20 @@ class Grid
     end
   end
 
-  def cast_rays(x, y)
-    diffs =
-      [
-        [1, 1],
-        [1, 0],
-        [1, -1],
-        [0, -1],
-        [-1, -1],
-        [-1, 0],
-        [-1, 1],
-        [0, 1],
-      ]
+  DIFFS =
+    [
+      [1, 1],
+      [1, 0],
+      [1, -1],
+      [0, -1],
+      [-1, -1],
+      [-1, 0],
+      [-1, 1],
+      [0, 1],
+    ]
 
-    diffs
-      .map { |ray| cast_ray(x, y, ray[0], ray[1]) }
+  def cast_rays(x, y)
+    DIFFS.map { |ray| cast_ray(x, y, ray[0], ray[1]) }
   end
 
   def cast_ray(x, y, fx, fy)
