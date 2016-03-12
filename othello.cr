@@ -1,13 +1,6 @@
-abstract class Game
-  abstract def over?(player_color)
-  abstract def winner
-
-  abstract def valid_moves(player_color)
-  abstract def valid_move?(move)
-
-  abstract def apply_move(move, player_color)
-  abstract def skip_move(player_color)
-end
+require "./game"
+require "./player"
+require "./ui"
 
 class Othello < Game
   def initialize(grid = nil, @skips = {} of Symbol => Bool)
@@ -218,105 +211,6 @@ struct Move
 
   def to_s(io)
     io << ('A'..'H').to_a[x] + ('0'..'7').to_a[y]
-  end
-end
-
-class Player
-  getter :color
-
-  def initialize(color)
-    @color = color
-  end
-
-  def next_move(game)
-    raise "Not implemented"
-  end
-end
-
-class HumanPlayer < Player
-  def next_move(game)
-    loop do
-      print "#{@color}’s move? (e.g. A3) "
-      raw_line = gets
-      if raw_line
-        line = raw_line.strip
-        if line !~ /\A(\w)(\d)\z/
-          puts "Invalid input: needs to be in the format “A3”."
-        elsif !('A'..'H').includes?($1.upcase) || !(1..8).includes?($2.to_i)
-          puts "Invalid input: needs to be in the format “A3”."
-        else
-          move = Move.new($1.upcase.ord - 'A'.ord, $2.to_i - 1, @color)
-
-          if game.valid_move?(move)
-            break move
-          else
-            puts "Invalid move!"
-          end
-        end
-      else
-        puts "Invalid input."
-      end
-    end
-  end
-end
-
-class RandomPlayer < Player
-  def next_move(game)
-    game.valid_moves(color).sample
-  end
-end
-
-class AIPlayer < Player
-  def next_move(game)
-    players = [
-      RandomPlayer.new(:white),
-      RandomPlayer.new(:black),
-    ]
-
-    game.valid_moves(color).max_by do |move|
-      runner = Runner.new(SilentUI.new, game.apply_move(move, self.color), players)
-      num_wins = (0...10).count { runner.play == color }
-      num_wins
-    end
-  end
-end
-
-class UI
-  def before_move(player, game)
-    raise "Not implemented"
-  end
-
-  def after_move(player, game)
-    raise "Not implemented"
-  end
-
-  def announce_winner(color)
-    raise "Not implemented"
-  end
-end
-
-class HumanUI < UI
-  def before_move(player, game)
-    puts game
-  end
-
-  def after_move(player, game)
-    puts
-  end
-
-  def announce_winner(color)
-    puts "#{color} wins!"
-  end
-end
-
-class SilentUI < UI
-  def before_move(player, game)
-  end
-
-  def after_move(player, game)
-  end
-
-  def announce_winner(color)
   end
 end
 
