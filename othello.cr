@@ -1,4 +1,7 @@
-class Grid
+class Game
+end
+
+class Othello < Game
   def initialize(grid = nil)
     @grid = grid || {
       {3, 3} => :black,
@@ -191,13 +194,13 @@ class Player
     @color = color
   end
 
-  def next_move(grid)
+  def next_move(game)
     raise "Not implemented"
   end
 end
 
 class HumanPlayer < Player
-  def next_move(grid)
+  def next_move(game)
     loop do
       print "#{@color}’s move? (e.g. A3) "
       raw_line = gets
@@ -210,7 +213,7 @@ class HumanPlayer < Player
         else
           move = Move.new($1.upcase.ord - 'A'.ord, $2.to_i - 1, @color)
 
-          if grid.valid_move?(move)
+          if game.valid_move?(move)
             break move
           else
             puts "Invalid move!"
@@ -224,20 +227,20 @@ class HumanPlayer < Player
 end
 
 class RandomPlayer < Player
-  def next_move(grid)
-    grid.valid_moves(color).sample
+  def next_move(game)
+    game.valid_moves(color).sample
   end
 end
 
 class AIPlayer < Player
-  def next_move(grid)
+  def next_move(game)
     players = [
       RandomPlayer.new(:white),
       RandomPlayer.new(:black),
     ]
 
-    grid.valid_moves(color).max_by do |move|
-      runner = Runner.new(SilentUI.new, grid.apply_move(move), players)
+    game.valid_moves(color).max_by do |move|
+      runner = Runner.new(SilentUI.new, game.apply_move(move), players)
       num_wins = (0...20).count { runner.play == color }
       num_wins
     end
@@ -245,11 +248,11 @@ class AIPlayer < Player
 end
 
 class UI
-  def before_move(player, grid)
+  def before_move(player, game)
     raise "Not implemented"
   end
 
-  def after_move(player, grid)
+  def after_move(player, game)
     raise "Not implemented"
   end
 
@@ -259,11 +262,11 @@ class UI
 end
 
 class HumanUI < UI
-  def before_move(player, grid)
-    puts grid
+  def before_move(player, game)
+    puts game
   end
 
-  def after_move(player, grid)
+  def after_move(player, game)
     puts
   end
 
@@ -273,10 +276,10 @@ class HumanUI < UI
 end
 
 class SilentUI < UI
-  def before_move(player, grid)
+  def before_move(player, game)
   end
 
-  def after_move(player, grid)
+  def after_move(player, game)
   end
 
   def announce_winner(color)
@@ -284,9 +287,10 @@ class SilentUI < UI
 end
 
 class Runner
-  def initialize(ui : UI, grid = Grid.new, players = nil)
+  # FIXME: pass in which game
+  def initialize(ui : UI, game = Othello.new, players = nil)
     @ui = ui
-    @grid = grid
+    @game = game
 
     @players = players || [
       RandomPlayer.new(:white),
@@ -295,7 +299,7 @@ class Runner
   end
 
   def play
-    grid = @grid
+    game = @game
 
     skipped_turns = {
       white: false,
@@ -304,15 +308,15 @@ class Runner
 
     loop do
       @players.each do |player|
-        @ui.before_move(player, grid)
+        @ui.before_move(player, game)
 
-        if grid.filled?
-          winner = grid.count(:white) > grid.count(:black) ? :white : :black
+        if game.filled?
+          winner = game.count(:white) > game.count(:black) ? :white : :black
           @ui.announce_winner(winner)
           return winner
-        elsif grid.valid_moves(player.color).empty?
+        elsif game.valid_moves(player.color).empty?
           if skipped_turns[player.color]
-            winner = grid.invert_color(player.color)
+            winner = game.invert_color(player.color)
             @ui.announce_winner(winner)
             return winner
           else
@@ -320,8 +324,8 @@ class Runner
           end
         else
           skipped_turns[player.color] = false
-          grid = grid.apply_move(player.next_move(grid))
-          @ui.after_move(player, grid)
+          game = game.apply_move(player.next_move(game))
+          @ui.after_move(player, game)
         end
       end
     end
@@ -330,7 +334,7 @@ end
 
 i = 0
 loop do
-  print "Runner #{i}… "
+  print "Game #{i}… "
   before = Time.now
   result = Runner.new(SilentUI.new).play
   after = Time.now
