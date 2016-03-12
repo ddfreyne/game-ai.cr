@@ -209,3 +209,30 @@ struct OthelloMove < Move
     io << ('A'..'H').to_a[x] + ('0'..'7').to_a[y]
   end
 end
+
+class HumanOthelloPlayer < Player
+  def next_move(game)
+    loop do
+      print "#{@color}’s move? (e.g. A3) "
+      raw_line = gets
+      if raw_line
+        line = raw_line.strip
+        if line !~ /\A(\w)(\d)\z/
+          puts "Invalid input: needs to be in the format “A3”."
+        elsif !('A'..'H').includes?($1.upcase) || !(1..8).includes?($2.to_i)
+          puts "Invalid input: needs to be in the format “A3”."
+        else
+          move = OthelloMove.new($1.upcase.ord - 'A'.ord, $2.to_i - 1, @color)
+
+          if game.valid_move?(move)
+            break move
+          else
+            puts "Invalid move!"
+          end
+        end
+      else
+        puts "Invalid input."
+      end
+    end
+  end
+end

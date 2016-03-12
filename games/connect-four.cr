@@ -3,21 +3,25 @@ class ConnectFour < Game
     @grid = grid || {} of Int32 => Bool
   end
 
-  # TODO
   def over?(player_color)
-    valid_moves(player_color).empty?
+    valid_moves(player_color).empty? || !winner.nil?
   end
 
-  # TODO
   def winner
-    :black
+    (0..6).each do |x|
+      (0..5).each do |y|
+        w = winner_at(x, y)
+        return w if w
+      end
+    end
+
+    nil
   end
 
   def valid_moves(player_color)
     possible_moves(player_color).select { |m| valid_move?(m) }
   end
 
-  # TODO
   def valid_move?(move)
     move.x >= 0 && move.x <= 6 && @grid[{move.x, 5}]?.nil?
   end
@@ -35,6 +39,24 @@ class ConnectFour < Game
 
   def possible_moves(player_color)
     (0..6).map { |x| ConnectFourMove.new(x, player_color) }
+  end
+
+  def winner_at(x, y)
+    winner_at_horizontal(x, y)
+  end
+
+  def winner_at_horizontal(x, y)
+    if x >= 3
+      nil
+    else
+      pc = self[x, y]
+
+      if pc == self[x+1, y] && pc == self[x+2, y] && pc == self[x+3, y]
+        pc
+      else
+        nil
+      end
+    end
   end
 
   def to_s(io)
@@ -87,5 +109,28 @@ struct ConnectFourMove < Move
 
   def to_s(io)
     io << (x + 1).to_s
+  end
+end
+
+class HumanConnectFourPlayer < Player
+  def next_move(game)
+    loop do
+      print "#{@color}’s move? (e.g. 3) "
+      raw_line = gets
+      if raw_line
+        line = raw_line.strip
+        # TODO: check format
+
+        move = ConnectFourMove.new(line.to_i - 1, @color)
+
+        if game.valid_move?(move)
+          break move
+        else
+          puts "Invalid move!"
+        end
+      else
+        puts "Invalid input."
+      end
+    end
   end
 end
