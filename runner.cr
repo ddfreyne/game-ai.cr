@@ -5,7 +5,7 @@ class Runner
 
     @players = players || [
       HumanConnectFourPlayer.new(:white),
-      AIPlayer.new(:black, 100),
+      SmarterAIPlayer.new(:black, 100),
     ]
   end
 
