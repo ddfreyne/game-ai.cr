@@ -42,7 +42,10 @@ class ConnectFour < Game
   end
 
   def winner_at(x, y)
-    winner_at_horizontal(x, y)
+    winner_at_horizontal(x, y) ||
+      winner_at_vertical(x, y) ||
+      winner_at_diagonal_up(x, y) ||
+      winner_at_diagonal_down(x, y)
   end
 
   def winner_at_horizontal(x, y)
@@ -52,6 +55,48 @@ class ConnectFour < Game
       pc = self[x, y]
 
       if pc == self[x+1, y] && pc == self[x+2, y] && pc == self[x+3, y]
+        pc
+      else
+        nil
+      end
+    end
+  end
+
+  def winner_at_vertical(x, y)
+    if y >= 2
+      nil
+    else
+      pc = self[x, y]
+
+      if pc == self[x, y+1] && pc == self[x, y+2] && pc == self[x, y+3]
+        pc
+      else
+        nil
+      end
+    end
+  end
+
+  def winner_at_diagonal_up(x, y)
+    if x >= 3 || y >= 2
+      nil
+    else
+      pc = self[x, y]
+
+      if pc == self[x+1, y+1] && pc == self[x+2, y+2] && pc == self[x+3, y+3]
+        pc
+      else
+        nil
+      end
+    end
+  end
+
+  def winner_at_diagonal_down(x, y)
+    if x >= 3 || y < 3
+      nil
+    else
+      pc = self[x, y]
+
+      if pc == self[x+1, y-1] && pc == self[x+2, y-2] && pc == self[x+3, y-3]
         pc
       else
         nil

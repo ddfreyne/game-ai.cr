@@ -1,2 +1,2 @@
-main: *.cr games/*.cr
-	crystal build --debug main.cr
+main: *.cr games/*.cr Makefile
+	crystal build --release main.cr
