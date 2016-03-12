@@ -4,8 +4,8 @@ class Runner
     @game = game
 
     @players = players || [
-      HumanConnectFourPlayer.new(:white),
-      SmarterAIPlayer.new(:black, 100),
+      HumanOthelloPlayer.new(:white),
+      SmarterAIPlayer.new(:black, 10),
     ]
   end
 

@@ -31,26 +31,39 @@ class Othello < Game
   end
 
   def valid_move?(move)
-    if self[move.x, move.y]
-      false
+    verify_move(move) do |move|
+      if self[move.x, move.y]
+        false
+      else
+        cast_rays(move.x, move.y).any? { |ray| valid_ray?(ray, move.color) }
+      end
+    end
+  end
+
+  def verify_move(move)
+    case move
+    when OthelloMove
+      yield move
     else
-      cast_rays(move.x, move.y).any? { |ray| valid_ray?(ray, move.color) }
+      raise ArgumentError.new("Wrong move class: #{move.class}")
     end
   end
 
   def apply_move(move, player_color)
-    new_grid = @grid.merge({ {move.x, move.y} => move.color })
+    verify_move(move) do |move|
+      new_grid = @grid.merge({ {move.x, move.y} => move.color })
 
-    valid_rays =
-      cast_rays(move.x, move.y).select{ |ray| valid_ray?(ray, move.color) }
-    valid_rays.each do |ray|
-      ray.each do |pair|
-        break if @grid[pair] == move.color
-        new_grid[pair] = move.color
+      valid_rays =
+        cast_rays(move.x, move.y).select{ |ray| valid_ray?(ray, move.color) }
+      valid_rays.each do |ray|
+        ray.each do |pair|
+          break if @grid[pair] == move.color
+          new_grid[pair] = move.color
+        end
       end
-    end
 
-    self.class.new(new_grid, @skips.merge({ player_color => false }))
+      self.class.new(new_grid, @skips.merge({ player_color => false }))
+    end
   end
 
   def skip_move(player_color)
@@ -217,18 +230,21 @@ class HumanOthelloPlayer < Player
       raw_line = gets
       if raw_line
         line = raw_line.strip
-        if line !~ /\A(\w)(\d)\z/
-          puts "Invalid input: needs to be in the format “A3”."
-        elsif !('A'..'H').includes?($1.upcase) || !(1..8).includes?($2.to_i)
-          puts "Invalid input: needs to be in the format “A3”."
-        else
-          move = OthelloMove.new($1.upcase.ord - 'A'.ord, $2.to_i - 1, @color)
-
-          if game.valid_move?(move)
-            break move
+        match = line.match(/\A(\w)(\d)\z/)
+        if match
+          if !("A".."H").includes?(match[1].upcase) || !(1..8).includes?(match[2].to_i)
+            puts "Invalid input: needs to be in the format “A3”."
           else
-            puts "Invalid move!"
+            move = OthelloMove.new(match[1].upcase[0].ord - 'A'.ord, match[2].to_i - 1, @color)
+
+            if game.valid_move?(move)
+              break move
+            else
+              puts "Invalid move!"
+            end
           end
+        else
+          puts "Invalid input: needs to be in the format “A3”."
         end
       else
         puts "Invalid input."

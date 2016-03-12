@@ -23,12 +23,16 @@ class ConnectFour < Game
   end
 
   def valid_move?(move)
-    move.x >= 0 && move.x <= 6 && @grid[{move.x, 5}]?.nil?
+    verify_move(move) do |move|
+      m.x >= 0 && m.x <= 6 && @grid[{move.x, 5}]?.nil?
+    end
   end
 
   def apply_move(move, player_color)
-    y = (0..5).find { |cy| @grid[{move.x, cy}]?.nil? }
-    self.class.new(@grid.merge({ {move.x, y} => player_color }))
+    verify_move(move) do |move|
+      y = (0..5).find { |cy| @grid[{move.x, cy}]?.nil? }
+      self.class.new(@grid.merge({ {move.x, y} => player_color }))
+    end
   end
 
   def skip_move(player_color)
@@ -36,6 +40,15 @@ class ConnectFour < Game
   end
 
   ###
+
+  def verify_move(move)
+    case move
+    when ConnectFourMove
+      yield move
+    else
+      raise ArgumentError.new("Wrong move class: #{move.class}")
+    end
+  end
 
   def possible_moves(player_color)
     (0..6).map { |x| ConnectFourMove.new(x, player_color) }
