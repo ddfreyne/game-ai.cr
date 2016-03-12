@@ -1,12 +1,13 @@
 abstract class Game
-  abstract def over?(player)
+  abstract def over?(player_color)
   abstract def winner
-  abstract def valid_moves(player)
-  abstract def apply_move(move)
+  abstract def valid_moves(player_color)
+  abstract def apply_move(move, player_color)
+  abstract def skip_move(player_color)
 end
 
 class Othello < Game
-  def initialize(grid = nil, @white_skipped = false, @black_skipped = false)
+  def initialize(grid = nil, @skips = {} of Symbol => Bool)
     @grid = grid || {
       {3, 3} => :black,
       {4, 4} => :black,
@@ -19,20 +20,25 @@ class Othello < Game
 
   ###
 
-  def over?(player)
-    # TODO: check valid_moves
-    filled?
+  def over?(player_color)
+    if filled?
+      true
+    elsif valid_moves(player_color).empty?
+      previously_skipped?(player_color)
+    else
+      false
+    end
   end
 
   def winner
     count(:white) > count(:black) ? :white : :black
   end
 
-  def valid_moves(color)
-    all_moves_for(color).select { |m| valid_move?(m) }
+  def valid_moves(player_color)
+    all_moves_for(player_color).select { |m| valid_move?(m) }
   end
 
-  def apply_move(move)
+  def apply_move(move, player_color)
     new_grid = @grid.merge({ {move.x, move.y} => move.color })
 
     valid_rays =
@@ -44,10 +50,18 @@ class Othello < Game
       end
     end
 
-    self.class.new(new_grid)
+    self.class.new(new_grid, @skips.merge({ player_color => false }))
+  end
+
+  def skip_move(player_color)
+    self.class.new(@grid, @skips.merge({ player_color => true }))
   end
 
   ###
+
+  def previously_skipped?(player_color)
+    @skips.fetch(player_color, false)
+  end
 
   def filled?
     (0..7).to_a.zip((0..7).to_a) do |x, y|
@@ -257,7 +271,7 @@ class AIPlayer < Player
     ]
 
     game.valid_moves(color).max_by do |move|
-      runner = Runner.new(SilentUI.new, game.apply_move(move), players)
+      runner = Runner.new(SilentUI.new, game.apply_move(move, self.color), players)
       num_wins = (0...10).count { runner.play == color }
       num_wins
     end
@@ -317,30 +331,18 @@ class Runner
   def play
     game = @game
 
-    skipped_turns = {
-      white: false,
-      black: false,
-    }
-
     loop do
       @players.each do |player|
         @ui.before_move(player, game)
 
-        if game.over?(player)
+        if game.over?(player.color)
           winner = game.winner
           @ui.announce_winner(winner)
           return winner
         elsif game.valid_moves(player.color).empty?
-          if skipped_turns[player.color]
-            winner = game.invert_color(player.color)
-            @ui.announce_winner(winner)
-            return winner
-          else
-            skipped_turns[player.color] = true
-          end
+          game = game.skip_move(player.color)
         else
-          skipped_turns[player.color] = false
-          game = game.apply_move(player.next_move(game))
+          game = game.apply_move(player.next_move(game), player.color)
           @ui.after_move(player, game)
         end
       end
